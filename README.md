@@ -31,7 +31,7 @@ rustup show
 
 确保在'installed targets'下显示'wasm32-unknown-unknown'。
 
-### 1.3 接着安装[cargo-generate](https://github.com/ashleygwilliams/cargo-generate)和cargo-run-script。
+### 1.3 接着安装[cargo-generate](https://github.com/ashleygwilliams/cargo-generate)和cargo-run-script：
 
 ```sh
 cargo install cargo-generate --features vendored-openssl
@@ -46,7 +46,7 @@ cargo --list
 
 确保命令列表中显示'generate'和'run-script'。
 
-### 1.4 最后安装Injectived
+### 1.4 最后安装Injectived：
 
 ```sh
 wget https://github.com/InjectiveLabs/injective-chain-releases/releases/download/v1.15.0-1748457819/linux-amd64.zip
@@ -63,9 +63,9 @@ injectived version
 
 ## 2. 创建Counter项目
 
-### 2.1 创建Counter合约
+### 2.1 创建项目
 
-现在，创建Counter项目,转到放置它的文件夹并运行:
+创建Counter项目,并转到它的文件夹:
 
 ```sh
 cargo generate --git https://github.com/CosmWasm/cw-template.git --name counter
@@ -99,7 +99,7 @@ docker run --rm -v "$(pwd)":/code \
   cosmwasm/optimizer:0.16.0
 ```
 
-或者，如果你在arm64机器上，你应该使用为arm64构建的docker镜像。
+或者，如果你在arm64机器上，你应该使用为arm64构建的docker镜像：
 
 ```sh
 docker run --rm -v "$(pwd)":/code \
@@ -125,7 +125,7 @@ injectived config set client node https://k8s.testnet.tm.injective.network:443
 injectived q bank balances ACCOUNT_ADDRESS
 ```
 
-确保显示账户余额。
+确保账户余额能正确显示。
 
 ### 3.2 添加钱包账户:
 
@@ -140,6 +140,12 @@ injectived keys unsafe-import-eth-key ACCOUNT_NAME $PRIVATE_KEY
 
 ```sh
 injectived keys list
+```
+
+确保账户内有INJ测试币:
+
+```sh
+injectived q bank balances ACCOUNT_ADDRESS
 ```
 
 ### 3.3 上传WSAM合约:
@@ -159,7 +165,7 @@ yes $KEYRING_PASSWORD | injectived tx wasm store artifacts/counter.wasm \
 injectived query tx $TRANSACTION_HASH --node=https://testnet.sentry.tm.injective.network:443
 ```
 
-记下node id。
+记下code id。
 
 ## 4. 与合约交互:
 
@@ -194,7 +200,7 @@ injectived query wasm contract-state smart $CONTRACT_ADDRESS "$GET_COUNT_QUERY" 
 --output json
 ```
 
-## 4.4 执行Increment程序:
+### 4.4 执行Increment程序:
 
 ```sh
 INCREMENT='{"increment":{}}'
@@ -205,7 +211,7 @@ yes $KEYRING_PASSWORD | injectived tx wasm execute $CONTRACT_ADDRESS "$INCREMENT
 --output json
 ```
 
-验证Increment:
+再次获取合约计数以验证:
 
 ```sh
 GET_COUNT_QUERY='{"get_count":{}}'
