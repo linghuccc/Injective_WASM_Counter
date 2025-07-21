@@ -252,6 +252,7 @@ TXHASH=$(
   --node=https://testnet.sentry.tm.injective.network:443 \
   --output json | jq -r .txhash
 )
+echo "txhash: $TXHASH"
 ```
 
 再次获取合约计数以验证:
