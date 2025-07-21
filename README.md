@@ -2,26 +2,25 @@
 
 ### 1.1 首先安装Rust:
 
-```sh
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-# 将Rust加载到当前shell会话中
-source "$HOME/.cargo/env"
-```
-
-验证安装:
+确认系统是否已安装Rust:
 
 ```sh
 rustc --version
 cargo --version
 ```
 
-### 1.2 其次安装`wasm32-unknown-unknown` target:
+如果没有，请通过下列命令安装：
 
 ```sh
-rustup target add wasm32-unknown-unknown
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# 将Rust加载到当前shell会话中
+source "$HOME/.cargo/env"
 ```
 
-验证安装:
+### 1.2 其次安装`wasm32-unknown-unknown` target:
+
+确认是否已安装wasm32-unknown-unknown:
 
 ```sh
 rustup target list --installed
@@ -29,36 +28,62 @@ rustup target list --installed
 rustup show
 ```
 
-确保在'installed targets'下显示'wasm32-unknown-unknown'。
+'installed targets'下应该显示'wasm32-unknown-unknown'，如果没有，请通过下列命令安装：
+
+```sh
+rustup target add wasm32-unknown-unknown
+```
+
 
 ### 1.3 接着安装[cargo-generate](https://github.com/ashleygwilliams/cargo-generate)和cargo-run-script：
 
-```sh
-cargo install cargo-generate --features vendored-openssl
-cargo install cargo-run-script
-```
-
-验证安装:
+确认是否已安装'cargo generate'和'cargo run-script':
 
 ```sh
 cargo --list
 ```
 
-确保命令列表中显示'generate'和'run-script'。
+命令列表中应显示'generate'和'run-script'，如果没有，请通过下列命令安装：
 
-### 1.4 最后安装Injectived：
+```sh
+cargo install cargo-generate --features vendored-openssl
+
+cargo install cargo-run-script
+```
+
+### 1.4 然后安装Injectived：
+
+确认是否已安装injectived:
+
+```sh
+injectived version
+```
+
+如果没有，请通过下列命令安装：
 
 ```sh
 wget https://github.com/InjectiveLabs/injective-chain-releases/releases/download/v1.15.0-1748457819/linux-amd64.zip
+
 unzip linux-amd64.zip
+
 sudo mv injectived peggo /usr/bin
 sudo mv libwasmvm.x86_64.so /usr/lib
 ```
 
-验证安装:
+### 1.5 最后安装yj：
+
+确认是否已安装yj:
 
 ```sh
-injectived version
+yj --version
+```
+
+如果没有，请通过下列命令安装：
+
+```sh
+sudo curl -L https://github.com/sclevine/yj/releases/latest/download/yj-linux-amd64 -o /usr/local/bin/yj
+
+sudo chmod +x /usr/local/bin/yj
 ```
 
 ## 2. 创建Counter项目
@@ -160,16 +185,13 @@ TXHASH=$(
   --node=https://testnet.sentry.tm.injective.network:443 \
   | yj -yj | jq -r .txhash
 )
-
 echo "txhash: $TXHASH"
 
 # 得到Code ID
 CODE_ID=$(
   injectived query tx $TXHASH --node=https://testnet.sentry.tm.injective.network:443 \
-  | yj -yj | jq .events[] -c | jq .attibutes[] -c \
-  | grep code_id | jq -r .value | head -n1
+  | yj -yj | jq -r '.events[] | select(.type == "store_code") | .attributes[] | select(.key == "code_id") | .value'
 )
-
 echo "code_id: $CODE_ID"
 ```
 
@@ -191,16 +213,14 @@ TXHASH=$(
   --node=https://testnet.sentry.tm.injective.network:443 \
   | yj -yj | jq -r .txhash
 )
-
 echo "txhash: $TXHASH"
 
 # 得到合约地址
 CONTRACT=$(
   injectived query tx $TXHASH --node=https://testnet.sentry.tm.injective.network:443 \
-  | yj -yj | jq .events[] -c | jq .attibutes[] -c \
+  | yj -yj | jq .events[] -c | jq .attributes[] -c \
   | grep contract_address | jq -r .value | head -n1
 )
-
 echo "contract: $CONTRACT"
 ```
 
