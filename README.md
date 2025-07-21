@@ -152,20 +152,26 @@ injectived q bank balances ACCOUNT_ADDRESS
 
 ```sh
 # 在"injective-core-staging"容器内，或如果本地运行injectived，则在合约目录中
-yes $KEYRING_PASSWORD | injectived tx wasm store artifacts/counter.wasm \
---from=$(echo $ACCOUNT_ADDRESS) \
---chain-id="injective-888" \
---yes --fees=1000000000000000inj --gas=2000000 \
---node=https://testnet.sentry.tm.injective.network:443
+TXHASH=${
+  yes $KEYRING_PASSWORD | injectived tx wasm store artifacts/counter.wasm \
+  --from=$(echo $ACCOUNT_ADDRESS) \
+  --chain-id="injective-888" \
+  --yes --fees=1000000000000000inj --gas=2000000 \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  | yj -yj | jq -r .txhash
+}
+
+echo "txhash: $TXHASH"
+
+# 得到Code ID
+CODE_ID=${
+  injectived query tx $TXHASH --node=https://testnet.sentry.tm.injective.network:443 \
+  | yj -yj | jq .events[] -c | jq .attibutes[] -c \
+  | grep code_id | jq -r .value | head -n1
+}
+
+echo "code_id: $CODE_ID"
 ```
-
-验证交易:
-
-```sh
-injectived query tx $TRANSACTION_HASH --node=https://testnet.sentry.tm.injective.network:443
-```
-
-记下code id。
 
 ## 4. 与合约交互:
 
@@ -173,49 +179,67 @@ injectived query tx $TRANSACTION_HASH --node=https://testnet.sentry.tm.injective
 
 ```sh
 INIT='{"count":99}'
-yes $KEYRING_PASSWORD | injectived tx wasm instantiate $CODE_ID $INIT \
---label="CounterTestInstance" \
---from=$(echo $ACCOUNT_ADDRESS) \
---chain-id="injective-888" \
---yes --fees=1000000000000000inj \
---gas=2000000 \
---no-admin \
---node=https://testnet.sentry.tm.injective.network:443
-```
+echo "instantiate: ${INIT}"
+TXHASH=${
+  yes $KEYRING_PASSWORD | injectived tx wasm instantiate $CODE_ID $INIT \
+  --label="CounterTestInstance" \
+  --from=$(echo $ACCOUNT_ADDRESS) \
+  --chain-id="injective-888" \
+  --yes --fees=1000000000000000inj \
+  --gas=2000000 \
+  --no-admin \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  | yj -yj | jq -r .txhash
+}
 
-记下合约地址。
+echo "txhash: $TXHASH"
+
+# 得到合约地址
+CONTRACT={
+  injectived query tx $TXHASH --node=https://testnet.sentry.tm.injective.network:443 \
+  | yj -yj | jq .events[] -c | jq .attibutes[] -c \
+  | grep contract_address | jq -r .value | head -n1
+}
+
+echo "contract: $CONTRACT"
+```
 
 ### 4.2 检查合约信息:
 
 ```sh
-injectived query wasm contract $CONTRACT_ADDRESS --node=https://testnet.sentry.tm.injective.network:443
+injectived query wasm contract $CONTRACT --node=https://testnet.sentry.tm.injective.network:443
 ```
 
 ### 4.3 获取合约计数:
 
 ```sh
 GET_COUNT_QUERY='{"get_count":{}}'
-injectived query wasm contract-state smart $CONTRACT_ADDRESS "$GET_COUNT_QUERY" \
+echo "query: ${GET_COUNT_QUERY}"
+injectived query wasm contract-state smart $CONTRACT "$GET_COUNT_QUERY" \
 --node=https://testnet.sentry.tm.injective.network:443 \
---output json
+--output json | jq .
 ```
 
 ### 4.4 执行Increment程序:
 
 ```sh
 INCREMENT='{"increment":{}}'
-yes $KEYRING_PASSWORD | injectived tx wasm execute $CONTRACT_ADDRESS "$INCREMENT" --from=$(echo $ACCOUNT_ADDRESS) \
---chain-id="injective-888" \
---yes --fees=1000000000000000inj --gas=2000000 \
---node=https://testnet.sentry.tm.injective.network:443 \
---output json
+echo "execute: ${INCREMENT}"
+TXHASH=${
+  yes $KEYRING_PASSWORD | injectived tx wasm execute $CONTRACT "$INCREMENT" --from=$(echo $ACCOUNT_ADDRESS) \
+  --chain-id="injective-888" \
+  --yes --fees=1000000000000000inj --gas=2000000 \
+  --node=https://testnet.sentry.tm.injective.network:443 \
+  --output json | jq -r .txhash
+}
 ```
 
 再次获取合约计数以验证:
 
 ```sh
 GET_COUNT_QUERY='{"get_count":{}}'
-injectived query wasm contract-state smart $CONTRACT_ADDRESS "$GET_COUNT_QUERY" \
+echo "query: ${GET_COUNT_QUERY}"
+injectived query wasm contract-state smart $CONTRACT "$GET_COUNT_QUERY" \
 --node=https://testnet.sentry.tm.injective.network:443 \
---output json
+--output json | jq .
 ```
