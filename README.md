@@ -218,7 +218,7 @@ echo "txhash: $TXHASH"
 # 得到合约地址
 CONTRACT=$(
   injectived query tx $TXHASH --node=https://testnet.sentry.tm.injective.network:443 \
-  | yj -yj | jq .events[] -c | jq .attributes[] -c \
+  | yj -yj | jq ".events[]" -c | jq ".attributes[]" -c \
   | grep contract_address | jq -r .value | head -n1
 )
 echo "contract: $CONTRACT"
